@@ -17,8 +17,6 @@ esp32:
     type: esp-idf
     sdkconfig_options:
       CONFIG_ESP32_S3_BOX_BOARD: "y"
-      # CONFIG_BT_BLE_42_FEATURES_SUPPORTED: y
-      # CONFIG_BT_BLE_50_FEATURES_SUPPORTED: n
 
 # Enable logging
 logger:
@@ -26,15 +24,11 @@ logger:
 # Enable Home Assistant API
 api:
 
-# Network configuration is now handled by the firmware selector
-# WiFi is loaded by default, use the Firmware Type selector in Home Assistant
-# to switch to Ethernet mode and trigger OTA update
-
 # Enable esphome OTA updates
 ota:
   - platform: esphome
 
-################################################################################
+# Ethernet Network Configuration
 packages:
   remote_package:
     url: https://github.com/Gabriel-Lewis/sensor-configs
@@ -43,7 +37,7 @@ packages:
     files:
       - 'bed-presence-mk1/base.yaml'
       - 'bed-presence-mk1/firmware-selector.yaml'
-      - 'bed-presence-mk1/network-wifi.yaml'
+      - 'bed-presence-mk1/network-ethernet.yaml'
       - 'esphome-common/bluetooth-proxy.yaml'
 
 # See https://github.com/ElevatedSensors/sensor-configs/blob/main/bed-presence-mk1/sensor.yaml for a detailed

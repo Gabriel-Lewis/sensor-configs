@@ -1,0 +1,11 @@
+# WiFi network configuration for Bed Presence Mk1
+# This file provides WiFi connectivity with captive portal fallback
+
+wifi:
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Bed-Presence Fallback Hotspot"
+    password: "bedpresence"
+
+# Captive portal for WiFi credential provisioning
+captive_portal:
