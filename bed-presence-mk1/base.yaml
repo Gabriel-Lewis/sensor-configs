@@ -1,6 +1,6 @@
 substitutions:
-  sensor_gpio_left: GPIO10
-  sensor_gpio_right: GPIO20
+  sensor_gpio_left: GPIO15
+  sensor_gpio_right: GPIO16
 
 # Diagnostics are now included in the network configuration files
 # to handle WiFi vs Ethernet specific components

@@ -7,8 +7,8 @@ ethernet:
   mosi_pin: GPIO11
   miso_pin: GPIO12
   cs_pin: GPIO14
-  interrupt_pin: GPIO10
-  reset_pin: GPIO9
+  interrupt_pin: GPIO4
+  reset_pin: GPIO5
 
 # Note: Captive portal is not needed for Ethernet connections
 
@@ -17,7 +17,7 @@ packages:
   diagnostics_base: !include
     file: ../esphome-common/diagnostics-base.yaml
     vars:
-      boot_gpio: GPIO9
+      boot_gpio: GPIO0
       uptime_id: bed_presence_uptime
       restart_id: btn_restart
       status_id: bed_presence_status
