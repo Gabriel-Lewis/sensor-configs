@@ -1,6 +1,9 @@
 # Firmware selector component for dynamic OTA updates
 # Allows switching between WiFi and Ethernet firmware configurations
 
+ota:
+  - platform: http_request
+
 update:
   - platform: http_request
     id: firmware_update_wifi
