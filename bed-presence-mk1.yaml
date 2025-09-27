@@ -17,8 +17,6 @@ esp32:
     type: esp-idf
     sdkconfig_options:
       CONFIG_ESP32_S3_BOX_BOARD: "y"
-      # CONFIG_BT_BLE_42_FEATURES_SUPPORTED: y
-      # CONFIG_BT_BLE_50_FEATURES_SUPPORTED: n
 
 # Enable logging
 logger:
@@ -26,41 +24,485 @@ logger:
 # Enable Home Assistant API
 api:
 
-# Network configuration is now handled by the firmware selector
-# WiFi is loaded by default, use the Firmware Type selector in Home Assistant
-# to switch to Ethernet mode and trigger OTA update
+# Ethernet Configuration
+ethernet:
+  type: W5500
+  clk_pin: GPIO13
+  mosi_pin: GPIO11
+  miso_pin: GPIO12
+  cs_pin: GPIO14
+  interrupt_pin: GPIO10
+  reset_pin: GPIO9
 
 # Enable esphome OTA updates
 ota:
   - platform: esphome
 
-################################################################################
-packages:
-  remote_package:
-    url: https://github.com/Gabriel-Lewis/sensor-configs
-    ref: main
-    refresh: 1s
-    files:
-      - 'bed-presence-mk1/base.yaml'
-      - 'bed-presence-mk1/firmware-selector.yaml'
-      - 'bed-presence-mk1/network-wifi.yaml'
-      - 'esphome-common/bluetooth-proxy.yaml'
-
-# See https://github.com/ElevatedSensors/sensor-configs/blob/main/bed-presence-mk1/sensor.yaml for a detailed
-# description of available substitutions.
-
 substitutions:
-#   sensor_gpio_left: GPIO10
-#   sensor_gpio_right: GPIO20
-#   sensor_gpio_left: '0.75'
-#   averaging_window_samples: '5'
-#   fast_delayed_on: '0ms'
-#   fast_delayed_off: '0ms'
-#   standard_delayed_on: '0s'
-#   standard_delayed_off: '1s'
-#   slow_delayed_on: '2s'
-#   slow_delayed_off: '5s'
-#   reporting_delta: '1.0'
-#   reporting_interval_max: '180s'
-#   calibrate_100: '408000'
-#   calibrate_0: '276000'
+  # Sensor GPIO pins
+  sensor_gpio_left: GPIO15
+  sensor_gpio_right: GPIO16
+
+  # Calibrate Trigger Percentile
+  trigger_percentile: '0.75'
+
+  # Window Averaging Samples
+  averaging_window_samples: '5'
+
+  # Fast Sensor Delay
+  fast_delayed_on: '0ms'
+  fast_delayed_off: '0ms'
+
+  # Standard Sensor Delay
+  standard_delayed_on: '0s'
+  standard_delayed_off: '1s'
+
+  # Slow Sensor Delay
+  slow_delayed_on: '2s'
+  slow_delayed_off: '5s'
+
+  # Reporting Delta
+  reporting_delta: '1.0'
+
+  # Reporting Interval (Max)
+  reporting_interval_max: '180s'
+
+  # Linear Calibration Points
+  calibrate_100: '408000'
+  calibrate_0: '276000'
+
+# Diagnostics
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO0
+      mode: INPUT_PULLUP
+      inverted: true
+    id: boot_button
+    internal: true
+    name: Boot Button
+    filters:
+      - delayed_on: 10s
+    on_press:
+      then:
+        - button.press: factory_reset_button
+
+  - platform: status
+    id: bed_presence_status
+    name: Status
+
+  # Left Sensor Binary Sensors
+  - platform: template
+    name: Bed Occupied Left (Fast)
+    id: bed_occupied_left_fast
+    device_class: occupancy
+    icon: mdi:speedometer
+    disabled_by_default: true
+    filters:
+      - delayed_on: ${fast_delayed_on}
+      - delayed_off: ${fast_delayed_off}
+    lambda: return id(bed_sensor_left).state > id(val_trigger_left).state;
+
+  - platform: template
+    name: Bed Occupied Left (Normal)
+    id: bed_occupied_left_normal
+    device_class: occupancy
+    icon: mdi:speedometer-medium
+    disabled_by_default: true
+    filters:
+      - delayed_on: ${standard_delayed_on}
+      - delayed_off: ${standard_delayed_off}
+    lambda: return id(bed_sensor_left).state > id(val_trigger_left).state;
+
+  - platform: template
+    id: bed_occupied_left_slow
+    name: Bed Occupied Left (Slow)
+    device_class: occupancy
+    icon: mdi:speedometer-slow
+    disabled_by_default: true
+    filters:
+      - delayed_on: ${slow_delayed_on}
+      - delayed_off: ${slow_delayed_off}
+    lambda: return id(bed_sensor_left).state > id(val_trigger_left).state;
+
+  - platform: template
+    name: Bed Occupied Left
+    id: bed_occupied_left
+    device_class: occupancy
+    icon: mdi:bed
+    lambda: |-
+      if (id(response_speed).state == "Fast") {
+        return id(bed_occupied_left_fast).state;
+      } else if (id(response_speed).state == "Slow") {
+        return id(bed_occupied_left_slow).state;
+      } else {
+        return id(bed_occupied_left_normal).state;
+      }
+
+  # Right Sensor Binary Sensors
+  - platform: template
+    name: Bed Occupied Right (Fast)
+    id: bed_occupied_right_fast
+    device_class: occupancy
+    icon: mdi:speedometer
+    disabled_by_default: true
+    filters:
+      - delayed_on: ${fast_delayed_on}
+      - delayed_off: ${fast_delayed_off}
+    lambda: return id(bed_sensor_right).state > id(val_trigger_right).state;
+
+  - platform: template
+    name: Bed Occupied Right (Normal)
+    id: bed_occupied_right_normal
+    device_class: occupancy
+    icon: mdi:speedometer-medium
+    disabled_by_default: true
+    filters:
+      - delayed_on: ${standard_delayed_on}
+      - delayed_off: ${standard_delayed_off}
+    lambda: return id(bed_sensor_right).state > id(val_trigger_right).state;
+
+  - platform: template
+    id: bed_occupied_right_slow
+    name: Bed Occupied Right (Slow)
+    device_class: occupancy
+    icon: mdi:speedometer-slow
+    disabled_by_default: true
+    filters:
+      - delayed_on: ${slow_delayed_on}
+      - delayed_off: ${slow_delayed_off}
+    lambda: return id(bed_sensor_right).state > id(val_trigger_right).state;
+
+  - platform: template
+    name: Bed Occupied Right
+    id: bed_occupied_right
+    device_class: occupancy
+    icon: mdi:bed
+    lambda: |-
+      if (id(response_speed).state == "Fast") {
+        return id(bed_occupied_right_fast).state;
+      } else if (id(response_speed).state == "Slow") {
+        return id(bed_occupied_right_slow).state;
+      } else {
+        return id(bed_occupied_right_normal).state;
+      }
+
+  # Combined Sensors
+  - platform: template
+    name: Bed Occupied Both (Fast)
+    id: bed_occupied_both_fast
+    device_class: occupancy
+    icon: mdi:bunk-bed
+    disabled_by_default: true
+    lambda: return id(bed_occupied_left_fast).state && id(bed_occupied_right_fast).state;
+
+  - platform: template
+    name: Bed Occupied Either (Fast)
+    id: bed_occupied_either_fast
+    device_class: occupancy
+    icon: mdi:bunk-bed
+    disabled_by_default: true
+    lambda: return id(bed_occupied_left_fast).state || id(bed_occupied_right_fast).state;
+
+  - platform: template
+    name: Bed Occupied Both
+    id: bed_occupied_both
+    device_class: occupancy
+    icon: mdi:bunk-bed
+    lambda: return id(bed_occupied_left).state && id(bed_occupied_right).state;
+
+  - platform: template
+    name: Bed Occupied Either
+    id: bed_occupied_either
+    device_class: occupancy
+    icon: mdi:bunk-bed
+    lambda: return id(bed_occupied_left).state || id(bed_occupied_right).state;
+
+sensor:
+  - platform: uptime
+    type: seconds
+    id: bed_presence_uptime
+    name: Uptime
+
+  # Left Sensor
+  - platform: pulse_counter
+    pin: ${sensor_gpio_left}
+    name: Left Pressure
+    id: bed_sensor_left
+    update_interval: 0.5s
+    unit_of_measurement: '%'
+    icon: mdi:gauge
+    filters:
+      - lambda: |-
+          float cal_0 = id(full_range).state ? 0 : ${calibrate_0};
+          float val = (x - cal_0) * 100;
+          float range = ${calibrate_100} - cal_0;
+          return val/range;
+      - clamp:
+          min_value: 0
+      - sliding_window_moving_average:
+          window_size: ${averaging_window_samples}
+          send_every: 1
+      - or:
+          - delta: ${reporting_delta}
+          - throttle: ${reporting_interval_max}
+
+  - platform: copy
+    source_id: bed_sensor_left
+    name: Calibrated Left Pressure
+    id: bed_sensor_left_calibrated
+    icon: mdi:scale-balance
+    disabled_by_default: true
+    filters:
+      - lambda: |-
+          float cal_0 = id(val_unoccupied_left).state;
+          float cal_100 = id(val_occupied_left).state;
+          float val = (x - cal_0) * 100;
+          float range = cal_100 - cal_0;
+          return val/range;
+      - clamp:
+          max_value: 100
+          min_value: 0
+
+  # Right Sensor
+  - platform: pulse_counter
+    pin: ${sensor_gpio_right}
+    name: Right Pressure
+    id: bed_sensor_right
+    update_interval: 0.5s
+    unit_of_measurement: '%'
+    icon: mdi:gauge
+    filters:
+      - lambda: |-
+          float cal_0 = id(full_range).state ? 0 : ${calibrate_0};
+          float val = (x - cal_0) * 100;
+          float range = ${calibrate_100} - cal_0;
+          return val/range;
+      - clamp:
+          min_value: 0
+      - sliding_window_moving_average:
+          window_size: ${averaging_window_samples}
+          send_every: 1
+      - or:
+          - delta: ${reporting_delta}
+          - throttle: ${reporting_interval_max}
+
+  - platform: copy
+    source_id: bed_sensor_right
+    name: Calibrated Right Pressure
+    id: bed_sensor_right_calibrated
+    icon: mdi:scale-balance
+    disabled_by_default: true
+    filters:
+      - lambda: |-
+          float cal_0 = id(val_unoccupied_right).state;
+          float cal_100 = id(val_occupied_right).state;
+          float val = (x - cal_0) * 100;
+          float range = cal_100 - cal_0;
+          return val/range;
+      - clamp:
+          max_value: 100
+          min_value: 0
+
+switch:
+  - platform: template
+    name: Full Range
+    id: full_range
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    entity_category: config
+    icon: mdi:arrow-expand
+
+select:
+  - platform: template
+    name: "Response Speed"
+    id: response_speed
+    icon: mdi:speedometer
+    optimistic: true
+    restore_value: true
+    options:
+      - "Fast"
+      - "Normal"
+      - "Slow"
+    initial_option: "Normal"
+    entity_category: config
+
+number:
+  # Left Sensor Numbers
+  - platform: template
+    name: Left Unoccupied Pressure
+    id: val_unoccupied_left
+    icon: mdi:gauge-empty
+    unit_of_measurement: '%'
+    entity_category: diagnostic
+    optimistic: true
+    restore_value: true
+    initial_value: 0
+    min_value: 0
+    max_value: 120
+    step: 1.0
+    mode: box
+    on_value:
+      then:
+        - lambda: id(update_trigger_left)->execute();
+
+  - platform: template
+    name: Left Occupied Pressure
+    id: val_occupied_left
+    icon: mdi:gauge-full
+    unit_of_measurement: '%'
+    entity_category: diagnostic
+    optimistic: true
+    restore_value: true
+    initial_value: 100
+    min_value: 0
+    max_value: 120
+    step: 1.0
+    mode: box
+    on_value:
+      then:
+        - lambda: id(update_trigger_left)->execute();
+
+  - platform: template
+    name: Left Trigger Pressure
+    id: val_trigger_left
+    optimistic: true
+    restore_value: true
+    initial_value: 50
+    min_value: 0
+    max_value: 120
+    step: 1.0
+    mode: box
+    icon: mdi:gauge
+    unit_of_measurement: '%'
+    entity_category: config
+
+  # Right Sensor Numbers
+  - platform: template
+    name: Right Unoccupied Pressure
+    id: val_unoccupied_right
+    icon: mdi:gauge-empty
+    unit_of_measurement: '%'
+    entity_category: diagnostic
+    optimistic: true
+    restore_value: true
+    initial_value: 0
+    min_value: 0
+    max_value: 120
+    step: 1.0
+    mode: box
+    on_value:
+      then:
+        - lambda: id(update_trigger_right)->execute();
+
+  - platform: template
+    name: Right Occupied Pressure
+    id: val_occupied_right
+    icon: mdi:gauge-full
+    unit_of_measurement: '%'
+    entity_category: diagnostic
+    optimistic: true
+    restore_value: true
+    initial_value: 100
+    min_value: 0
+    max_value: 120
+    step: 1.0
+    mode: box
+    on_value:
+      then:
+        - lambda: id(update_trigger_right)->execute();
+
+  - platform: template
+    name: Right Trigger Pressure
+    id: val_trigger_right
+    optimistic: true
+    restore_value: true
+    initial_value: 50
+    min_value: 0
+    max_value: 120
+    step: 1.0
+    mode: box
+    icon: mdi:gauge
+    unit_of_measurement: '%'
+    entity_category: config
+
+button:
+  - platform: factory_reset
+    id: factory_reset_button
+    internal: true
+
+  - platform: restart
+    name: Restart
+    id: btn_restart
+    entity_category: diagnostic
+
+  # Left Sensor Buttons
+  - platform: template
+    name: Calibrate Left Unoccupied
+    id: calibration_left_set_unoccupied
+    icon: mdi:bed-empty
+    entity_category: config
+    on_press:
+      then:
+        - number.set:
+            id: val_unoccupied_left
+            value: !lambda return round(id(bed_sensor_left).state * 100)/100.0;
+
+  - platform: template
+    name: Calibrate Left Occupied
+    id: calibration_left_set_occupied
+    icon: mdi:bed
+    entity_category: config
+    on_press:
+      then:
+        - number.set:
+            id: val_occupied_left
+            value: !lambda return round(id(bed_sensor_left).state * 100)/100.0;
+
+  # Right Sensor Buttons
+  - platform: template
+    name: Calibrate Right Unoccupied
+    id: calibration_right_set_unoccupied
+    icon: mdi:bed-empty
+    entity_category: config
+    on_press:
+      then:
+        - number.set:
+            id: val_unoccupied_right
+            value: !lambda return round(id(bed_sensor_right).state * 100)/100.0;
+
+  - platform: template
+    name: Calibrate Right Occupied
+    id: calibration_right_set_occupied
+    icon: mdi:bed
+    entity_category: config
+    on_press:
+      then:
+        - number.set:
+            id: val_occupied_right
+            value: !lambda return round(id(bed_sensor_right).state * 100)/100.0;
+
+script:
+  - id: update_trigger_left
+    mode: queued
+    then:
+      - lambda: |-
+          float unoccupied_pressure = id(val_unoccupied_left).state;
+          float occupied_pressure = id(val_occupied_left).state;
+          float trigger_pressure = unoccupied_pressure + ((occupied_pressure - unoccupied_pressure) * float(${trigger_percentile}));
+          trigger_pressure = round(trigger_pressure * 100)/100.0;
+          auto call = id(val_trigger_left).make_call();
+          call.set_value(trigger_pressure);
+          call.perform();
+
+  - id: update_trigger_right
+    mode: queued
+    then:
+      - lambda: |-
+          float unoccupied_pressure = id(val_unoccupied_right).state;
+          float occupied_pressure = id(val_occupied_right).state;
+          float trigger_pressure = unoccupied_pressure + ((occupied_pressure - unoccupied_pressure) * float(${trigger_percentile}));
+          trigger_pressure = round(trigger_pressure * 100)/100.0;
+          auto call = id(val_trigger_right).make_call();
+          call.set_value(trigger_pressure);
+          call.perform();
