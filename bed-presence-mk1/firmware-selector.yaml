@@ -1,6 +1,10 @@
 # Firmware selector component for dynamic OTA updates
 # Allows switching between WiFi and Ethernet firmware configurations
 
+http_request:
+  useragent: esphome/device
+  timeout: 10s
+
 ota:
   - platform: http_request
 
