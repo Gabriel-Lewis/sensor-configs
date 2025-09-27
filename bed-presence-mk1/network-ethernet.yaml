@@ -7,8 +7,8 @@ ethernet:
   mosi_pin: GPIO11
   miso_pin: GPIO12
   cs_pin: GPIO14
-  interrupt_pin: GPIO4
-  reset_pin: GPIO5
+  interrupt_pin: GPIO10
+  reset_pin: GPIO9
 
 # Note: Captive portal is not needed for Ethernet connections
 
