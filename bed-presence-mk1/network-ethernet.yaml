@@ -11,3 +11,13 @@ ethernet:
   reset_pin: GPIO9
 
 # Note: Captive portal is not needed for Ethernet connections
+
+# Base diagnostics only (no WiFi-specific sensors)
+packages:
+  diagnostics_base: !include
+    file: ../esphome-common/diagnostics-base.yaml
+    vars:
+      boot_gpio: GPIO9
+      uptime_id: bed_presence_uptime
+      restart_id: btn_restart
+      status_id: bed_presence_status

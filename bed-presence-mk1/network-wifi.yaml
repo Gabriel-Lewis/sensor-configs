@@ -9,3 +9,18 @@ wifi:
 
 # Captive portal for WiFi credential provisioning
 captive_portal:
+
+# WiFi-specific diagnostics
+packages:
+  diagnostics_base: !include
+    file: ../esphome-common/diagnostics-base.yaml
+    vars:
+      boot_gpio: GPIO9
+      uptime_id: bed_presence_uptime
+      restart_id: btn_restart
+      status_id: bed_presence_status
+  diagnostics_wifi: !include
+    file: ../esphome-common/diagnostics-wifi.yaml
+    vars:
+      wifi_db_id: wifi_signal_db
+      wifi_percent_id: wifi_signal_percent

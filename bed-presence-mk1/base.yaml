@@ -2,15 +2,10 @@ substitutions:
   sensor_gpio_left: GPIO10
   sensor_gpio_right: GPIO20
 
-packages:
-  diagnostics: !include
-    file: ../esphome-common/diagnostics.yaml
-    vars:
-      boot_gpio: GPIO9
-      uptime_id: bed_presence_uptime
-      restart_id: btn_restart
-      status_id: bed_presence_status
+# Diagnostics are now included in the network configuration files
+# to handle WiFi vs Ethernet specific components
 
+packages:
   left_bed_sensor: !include
     file: sensor.yaml
     vars:
