@@ -26,8 +26,8 @@ logger:
 # Enable Home Assistant API
 api:
 
-# Enable wifi
-
+# Optional Ethernet configuration (W5500)
+# Comment out this entire ethernet section to use WiFi instead
 ethernet:
   type: W5500
   clk_pin: GPIO13
@@ -36,6 +36,14 @@ ethernet:
   cs_pin: GPIO14
   interrupt_pin: GPIO10
   reset_pin: GPIO9
+
+# WiFi configuration (fallback when ethernet is not used)
+# Uncomment this section when not using ethernet
+# wifi:
+#   # Enable fallback hotspot (captive portal) in case wifi connection fails
+#   ap:
+#     ssid: "Bed-Presence Fallback Hotspot"
+#     password: "bedpresence"
 
 # In combination with the `ap` this allows the user
 # to provision wifi credentials to the device via WiFi AP.
