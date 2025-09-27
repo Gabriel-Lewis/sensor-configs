@@ -26,8 +26,6 @@ select:
             then:
               - logger.log: "OTA updates set to use ethernet firmware"
               - lambda: id(update_http_request).set_source_url("https://raw.githubusercontent.com/Gabriel-Lewis/sensor-configs/main/firmware/bed-presence-mk1-ethernet-manifest.json");
-              - component.update: update_http_request
             else:
               - logger.log: "OTA updates set to use wifi firmware"
               - lambda: id(update_http_request).set_source_url("https://raw.githubusercontent.com/Gabriel-Lewis/sensor-configs/main/firmware/bed-presence-mk1-wifi-manifest.json");
-              - component.update: update_http_request
