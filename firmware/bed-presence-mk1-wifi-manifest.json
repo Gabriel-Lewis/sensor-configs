@@ -7,12 +7,7 @@
   "builds": [
     {
       "chipFamily": "ESP32-S3",
-      "parts": [
-        {
-          "path": "bed-presence-mk1-wifi.factory.bin",
-          "offset": 0
-        }
-      ]
+      "configuration": "https://raw.githubusercontent.com/Gabriel-Lewis/sensor-configs/main/bed-presence-mk1-wifi.yaml"
     }
   ]
 }
