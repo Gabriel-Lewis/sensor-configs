@@ -1,10 +1,16 @@
 # Firmware selector component for dynamic OTA updates
 # Allows switching between WiFi and Ethernet firmware configurations
 
-http_request:
-  id: update_http_request
-  useragent: esphome/device
-  timeout: 10s
+update:
+  - platform: http_request
+    id: firmware_update_wifi
+    name: "WiFi Firmware Update"
+    source: "https://raw.githubusercontent.com/Gabriel-Lewis/sensor-configs/main/firmware/bed-presence-mk1-wifi-manifest.json"
+
+  - platform: http_request
+    id: firmware_update_ethernet
+    name: "Ethernet Firmware Update"
+    source: "https://raw.githubusercontent.com/Gabriel-Lewis/sensor-configs/main/firmware/bed-presence-mk1-ethernet-manifest.json"
 
 select:
   - platform: template
@@ -24,8 +30,6 @@ select:
             condition:
               lambda: 'return id(firmware_selector).state == "Ethernet";'
             then:
-              - logger.log: "OTA updates set to use ethernet firmware"
-              - lambda: id(update_http_request).set_source_url("https://raw.githubusercontent.com/Gabriel-Lewis/sensor-configs/main/firmware/bed-presence-mk1-ethernet-manifest.json");
+              - logger.log: "Firmware selector changed to Ethernet mode"
             else:
-              - logger.log: "OTA updates set to use wifi firmware"
-              - lambda: id(update_http_request).set_source_url("https://raw.githubusercontent.com/Gabriel-Lewis/sensor-configs/main/firmware/bed-presence-mk1-wifi-manifest.json");
+              - logger.log: "Firmware selector changed to WiFi mode"
